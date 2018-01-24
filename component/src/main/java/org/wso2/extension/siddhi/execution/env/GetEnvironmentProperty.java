@@ -67,23 +67,28 @@ public class GetEnvironmentProperty extends FunctionExecutor {
 
     protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader reader,
                         SiddhiAppContext siddhiAppContext) {
-        //Sample code to convert mile to km
-        if (attributeExpressionExecutors.length != 1) {
+
+        if (attributeExpressionExecutors.length < 1) {
             throw new SiddhiAppValidationException(
-                    "Invalid no of arguments passed to SampleFunction:TheFun() function, " +
-                            "required 1, but found " + attributeExpressionExecutors.length);
+                    "Invalid no of arguments passed to env:getEnvironmentProperty() function, " +
+                            "required at least 1, but found " + attributeExpressionExecutors.length);
         }
         Attribute.Type attributeType = attributeExpressionExecutors[0].getReturnType();
-        if (!((attributeType == Attribute.Type.DOUBLE)
-                || (attributeType == Attribute.Type.INT)
-                || (attributeType == Attribute.Type.FLOAT)
-                || (attributeType == Attribute.Type.STRING)
-                || (attributeType == Attribute.Type.LONG))) {
+        if (!(attributeType == Attribute.Type.STRING)) {
             throw new SiddhiAppValidationException("Invalid parameter type found " +
-                    "for the argument of TheFun function, " +
-                    "required " + Attribute.Type.INT + " or " + Attribute.Type.LONG +
-                    " or " + Attribute.Type.FLOAT + " or " + Attribute.Type.DOUBLE +
+                    "for the argument key of getEnvironmentProperty() function, " +
+                    "required " + Attribute.Type.STRING  +
                     ", but found " + attributeType.toString());
+        }
+
+        if (attributeExpressionExecutors.length == 2) {
+            Attribute.Type attribute2Type = attributeExpressionExecutors[0].getReturnType();
+            if (!(attribute2Type == Attribute.Type.STRING)) {
+                throw new SiddhiAppValidationException("Invalid parameter type found " +
+                        "for the argument default.value of getEnvironmentProperty() function, " +
+                        "required " + Attribute.Type.STRING  +
+                        ", but found " + attributeType.toString());
+            }
         }
     }
 
@@ -96,8 +101,20 @@ public class GetEnvironmentProperty extends FunctionExecutor {
      */
     @Override
     protected Object execute(Object[] data) {
+        if (data.length > 1) {
+            if (data[0] instanceof String) {
+                String key = (String) data[0];
+                String defaultValue = (String) data[1];
+
+                return System.getProperty(key , defaultValue);
+
+            } else {
+                throw new SiddhiAppRuntimeException("Input to the getSystemProperty() function must be a String");
+            }
+        }
+
         return null;
-    }
+   }
 
     /**
      * The main execution method which will be called upon event arrival
@@ -109,17 +126,17 @@ public class GetEnvironmentProperty extends FunctionExecutor {
      */
     @Override
     protected Object execute(Object data) {
-        //Sample code.
+
         if (data != null) {
-            //type-conversion.
+
             if (data instanceof String) {
                 String inputString = (String) data;
-                return System.getProperty(inputString, "os.name");
+                return System.getProperty(inputString, null);
             } else {
-                throw new SiddhiAppRuntimeException("Input to the TheFun function must be a String");
+                throw new SiddhiAppRuntimeException("Input to the getEnvironmentProperty() function must be a String");
             }
         } else {
-            throw new SiddhiAppRuntimeException("Input to the TheFun function cannot be null");
+            throw new SiddhiAppRuntimeException("Input to the getEnvironmentProperty() function cannot be null");
         }
     }
     /**

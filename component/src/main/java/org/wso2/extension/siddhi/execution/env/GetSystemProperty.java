@@ -32,6 +32,7 @@ import org.wso2.siddhi.query.api.definition.Attribute;
 import org.wso2.siddhi.query.api.exception.SiddhiAppValidationException;
 
 import java.util.Map;
+
 /**
  * Siddhi Function for TheFun.
  */
@@ -67,22 +68,27 @@ public class GetSystemProperty extends FunctionExecutor {
 
     protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader reader,
                         SiddhiAppContext siddhiAppContext) {
-        //Sample code to convert mile to km
-        if (attributeExpressionExecutors.length != 1) {
+        if (attributeExpressionExecutors.length < 1) {
             throw new SiddhiAppValidationException(
                     "Invalid no of arguments passed to env:getSystemProperty() function, " +
-                            "required 1, but found " + attributeExpressionExecutors.length);
+                            "required at least 1, but found " + attributeExpressionExecutors.length);
         }
         Attribute.Type attributeType = attributeExpressionExecutors[0].getReturnType();
-        if (!((attributeType == Attribute.Type.STRING)
-                || (attributeType == Attribute.Type.INT)
-                || (attributeType == Attribute.Type.FLOAT)
-                || (attributeType == Attribute.Type.STRING)
-                || (attributeType == Attribute.Type.LONG))) {
+        if (!((attributeType == Attribute.Type.STRING))) {
             throw new SiddhiAppValidationException("Invalid parameter type found " +
-                    "for the argument of getSystemProperty() function, " +
+                    "for the argument key of getSystemProperty() function, " +
                     "required " + Attribute.Type.STRING +
                     ", but found " + attributeType.toString());
+        }
+
+        if (attributeExpressionExecutors.length == 2) {
+            Attribute.Type attribute2Type = attributeExpressionExecutors[1].getReturnType();
+            if (!((attribute2Type == Attribute.Type.STRING))) {
+                throw new SiddhiAppValidationException("Invalid parameter type found " +
+                        "for the argument default.value of getSystemProperty() function, " +
+                        "required " + Attribute.Type.STRING +
+                        ", but found " + attributeType.toString());
+            }
         }
     }
 
@@ -95,6 +101,25 @@ public class GetSystemProperty extends FunctionExecutor {
      */
     @Override
     protected Object execute(Object[] data) {
+
+        if (data.length > 1) {
+            if (data[0] instanceof String) {
+                String key = (String) data[0];
+                String defaultValue = (String) data[1];
+
+                String returnValue = System.getenv(key);
+
+                if (returnValue != null) {
+                    return returnValue;
+                } else {
+                    return defaultValue;
+                }
+
+            } else {
+                throw new SiddhiAppRuntimeException("Input to the getSystemProperty() function must be a String");
+            }
+        }
+
         return null;
     }
 
@@ -112,13 +137,13 @@ public class GetSystemProperty extends FunctionExecutor {
         if (data != null) {
             //type-conversion.
             if (data instanceof String) {
-                String inputString = (String) data;
-                return System.getenv(inputString);
+                String key = (String) data;
+                return System.getenv(key);
             } else {
-                throw new SiddhiAppRuntimeException("Input to the TheFun function must be a String");
+                throw new SiddhiAppRuntimeException("Input to the getSystemProperty() function must be a String");
             }
         } else {
-            throw new SiddhiAppRuntimeException("Input to the TheFun function cannot be null");
+            throw new SiddhiAppRuntimeException("Input to the getSystemProperty() function cannot be null");
         }
     }
 

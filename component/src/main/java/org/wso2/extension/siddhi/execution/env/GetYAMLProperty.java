@@ -20,11 +20,12 @@ package org.wso2.extension.siddhi.execution.env;
 
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
-//import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.Parameter;
 import org.wso2.siddhi.annotation.ReturnAttribute;
-//import org.wso2.siddhi.annotation.util.DataType;
+import org.wso2.siddhi.annotation.util.DataType;
 import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
+import org.wso2.siddhi.core.executor.ConstantExpressionExecutor;
 import org.wso2.siddhi.core.executor.ExpressionExecutor;
 import org.wso2.siddhi.core.executor.function.FunctionExecutor;
 import org.wso2.siddhi.core.util.config.ConfigReader;
@@ -41,13 +42,28 @@ import java.util.Map;
         name = "getYAMLProperty",
         namespace = "env",
         description = "This function returns the YAML Property requested or the default values specified if such a" +
-                "variable is not available, returned",
+                "variable is not available",
+        parameters = {
+                @Parameter(name = "key",
+                        description = "This specifies Key of the property to be read.",
+                        type = {DataType.STRING}),
+                @Parameter(name = "data.type",
+                        description = "A string constant parameter expressing the cast to type using one of the " +
+                                "following strings values: int, long, float, double, string, bool.",
+                        type = {DataType.STRING}),
+                @Parameter(name = "default.value",
+                        description = "This specifies the default Value to be returned " +
+                                "if the property value is not available.",
+                        type = {DataType.INT, DataType.LONG, DataType.DOUBLE, DataType.FLOAT,
+                                DataType.STRING, DataType.BOOL})
+        },
         returnAttributes = @ReturnAttribute(
-                description = "Returned type will be string.",
+                description = "Returned type will be default to string, but it could be any of the following: " +
+                        "int, long, float, double, string, bool.",
                 type = {org.wso2.siddhi.annotation.util.DataType.INT, org.wso2.siddhi.annotation.util.DataType.LONG,
                         org.wso2.siddhi.annotation.util.DataType.DOUBLE, org.wso2.siddhi.annotation.util.DataType.FLOAT,
-                        org.wso2.siddhi.annotation.util.DataType.STRING, org.wso2.siddhi.annotation.util.DataType.BOOL,
-                        org.wso2.siddhi.annotation.util.DataType.OBJECT}),
+                        org.wso2.siddhi.annotation.util.DataType.STRING, org.wso2.siddhi.annotation.util.DataType.BOOL
+                }),
         examples = {
                 @Example(
                         syntax = "define stream inputStream (symbol string, price long, volume long);\n" +
@@ -63,6 +79,8 @@ import java.util.Map;
 public class GetYAMLProperty extends FunctionExecutor {
 
     private ConfigReader reader;
+    private Attribute.Type returnType = Attribute.Type.STRING;
+
 
     /**
      * The initialization method for TheFun, this method will be called before the other methods.
@@ -73,19 +91,63 @@ public class GetYAMLProperty extends FunctionExecutor {
 
     protected void init(ExpressionExecutor[] attributeExpressionExecutors, ConfigReader reader,
                         SiddhiAppContext siddhiAppContext) {
-        //Sample code to convert mile to km
+
         if (attributeExpressionExecutors.length < 1) {
             throw new SiddhiAppValidationException(
-                    "Invalid no of arguments passed to SampleFunction:TheFun() function, " +
-                            "required 1, but found " + attributeExpressionExecutors.length);
+                    "Invalid no of arguments passed to env:getYAMLProperty() function, " +
+                            "required at least 1, but found " + attributeExpressionExecutors.length);
         }
-        Attribute.Type attributeType = attributeExpressionExecutors[0].getReturnType();
-        if (!((attributeType == Attribute.Type.STRING))) {
+        Attribute.Type attribute1Type = attributeExpressionExecutors[0].getReturnType();
+        if (!((attribute1Type == Attribute.Type.STRING))) {
             throw new SiddhiAppValidationException("Invalid parameter type found " +
-                    "for the argument of TheFun function, " +
-                    "required " + Attribute.Type.INT + " or " + Attribute.Type.LONG +
-                    " or " + Attribute.Type.FLOAT + " or " + Attribute.Type.DOUBLE +
-                    ", but found " + attributeType.toString());
+                    "for the argument Key of getYAMLProperty() function, " +
+                    "required " + Attribute.Type.STRING +
+                    ", but found " + attribute1Type.toString());
+        }
+
+        if (attributeExpressionExecutors.length > 1) {
+            if (!(attributeExpressionExecutors[1] instanceof ConstantExpressionExecutor)) {
+                throw new SiddhiAppValidationException("The second argument has to be a string constant specifying " +
+                        "one of the supported data types "
+                        + "(int, long, float, double, string, bool)");
+            } else {
+                String type = attributeExpressionExecutors[1].execute(null).toString();
+                if ("int".equals(type)) {
+                    returnType = Attribute.Type.INT;
+                } else if ("long".equalsIgnoreCase(type)) {
+                    returnType = Attribute.Type.LONG;
+                } else if ("float".equalsIgnoreCase(type)) {
+                    returnType = Attribute.Type.FLOAT;
+                } else if ("double".equalsIgnoreCase(type)) {
+                    returnType = Attribute.Type.DOUBLE;
+                } else if ("bool".equalsIgnoreCase(type)) {
+                    returnType = Attribute.Type.BOOL;
+                } else if ("string".equalsIgnoreCase(type)) {
+                    returnType = Attribute.Type.STRING;
+                } else {
+                    throw new SiddhiAppValidationException("Type must be one of int, long, float, double, bool, " +
+                            "string");
+                }
+            }
+        }
+
+        if (attributeExpressionExecutors.length > 2) {
+            Attribute.Type attribute3Type = attributeExpressionExecutors[2].getReturnType();
+//            if (!((attribute3Type == Attribute.Type.DOUBLE)
+//                    || (attribute3Type == Attribute.Type.INT)
+//                    || (attribute3Type == Attribute.Type.FLOAT)
+//                    || (attribute3Type == Attribute.Type.STRING)
+//                    || (attribute3Type == Attribute.Type.LONG))) {
+//                throw new SiddhiAppValidationException("Invalid parameter type found " +
+//                        "for the argument defaultValue getYAMLProperty() function, " +
+//                        "required " + Attribute.Type.INT + " or " + Attribute.Type.LONG +
+//                        " or " + Attribute.Type.FLOAT + " or " + Attribute.Type.DOUBLE +
+//                        ", but found " + attribute3Type.toString());
+//            }
+            if (!(attribute3Type == returnType)) {
+                throw new SiddhiAppValidationException("Type of parameter default.Value " +
+                        "needs to match parameter data.type");
+            }
         }
 
         this.reader = reader;
@@ -103,15 +165,140 @@ public class GetYAMLProperty extends FunctionExecutor {
 
         if (data.length == 2) {
             if (data[0] instanceof String) {
-                String inputString = (String) data[0];
+                String key = (String) data[0];
 
-                String defaultValue = (String) data[1];
+                String value = reader.readConfig(key, null);
 
-                String value = reader.readConfig(inputString, defaultValue);
-                return value;
+                if (value != null) {
+
+                    try {
+
+                        switch (returnType) {
+                            case INT:
+                                int intValue = Integer.parseInt(value);
+                                return intValue;
+                            case LONG:
+                                long longValue = Long.parseLong(value);
+                                return longValue;
+                            case FLOAT:
+                                float floatValue = Float.parseFloat(value);
+                                return floatValue;
+                            case DOUBLE:
+                                double doubleValue = Double.parseDouble(value);
+                                return doubleValue;
+                            case BOOL:
+                                boolean boolValue = Boolean.parseBoolean(value);
+                                return boolValue;
+                            case STRING:
+                                break;
+                        }
+                        return value;
+                    } catch (ClassCastException e) {
+                        throw new SiddhiAppRuntimeException
+                                ("The type of property value and parameter dataType does not match");
+                    }
+
+                } else {
+                    return value;
+                }
+
             } else {
                 throw new SiddhiAppRuntimeException
-                        ("The Value of parameter Key to the getYAMLProperty function must be String");
+                        ("The value of parameter Key to the getYAMLProperty function must be String");
+            }
+        } else if (data.length == 3) {
+
+            if (data[0] instanceof String) {
+                String key = (String) data[0];
+
+                String value = reader.readConfig(key, null);
+
+                if (value != null) {
+
+                    try {
+
+                        switch (returnType) {
+                            case INT:
+                                int intValue = Integer.parseInt(value);
+                                return intValue;
+                            case LONG:
+                                long longValue = Long.parseLong(value);
+                                return longValue;
+                            case FLOAT:
+                                float floatValue = Float.parseFloat(value);
+                                return floatValue;
+                            case DOUBLE:
+                                double doubleValue = Double.parseDouble(value);
+                                return doubleValue;
+                            case BOOL:
+                                boolean boolValue = Boolean.parseBoolean(value);
+                                return boolValue;
+                            case STRING:
+                                break;
+                        }
+                        return value;
+                    } catch (NumberFormatException e) {
+                        throw new SiddhiAppRuntimeException
+                                ("The type of property value and parameter dataType does not match");
+                    }
+
+                } else {
+
+                    switch (returnType) {
+                        case STRING:
+                            if (data[2] instanceof String) {
+                                return data[2];
+                            } else {
+                                throw new SiddhiAppRuntimeException
+                                        ("The type of default value and parameter dataType does not match");
+                            }
+                        case BOOL:
+                            if (data[2] instanceof Boolean) {
+                                return data[2];
+                            } else {
+                                throw new SiddhiAppRuntimeException
+                                        ("The type of default value and parameter dataType does not match");
+
+                            }
+                        case LONG:
+                            if (data[2] instanceof Long) {
+                                return data[2];
+                            } else {
+                                throw new SiddhiAppRuntimeException
+                                        ("The type of default value and parameter dataType does not match");
+
+                            }
+                        case INT:
+                            if (data[2] instanceof Integer) {
+                                return data[2];
+                            } else {
+                                throw new SiddhiAppRuntimeException
+                                        ("The type of default value and parameter dataType does not match");
+
+                            }
+                        case DOUBLE:
+                            if (data[2] instanceof Double) {
+                                return data[2];
+                            } else {
+                                throw new SiddhiAppRuntimeException
+                                        ("The type of default value and parameter dataType does not match");
+
+                            }
+                        case FLOAT:
+                            if (data[2] instanceof Float) {
+                                return data[2];
+                            } else {
+                                throw new SiddhiAppRuntimeException
+                                        ("The type of default value and parameter dataType does not match");
+
+                            }
+                    }
+                  return null;
+                }
+
+            } else {
+                throw new SiddhiAppRuntimeException
+                        ("The value of parameter Key to the getYAMLProperty function must be String");
             }
         } else {
             return null;
@@ -132,15 +319,14 @@ public class GetYAMLProperty extends FunctionExecutor {
         if (data != null) {
             //type-conversion.
             if (data instanceof String) {
-                String inputString = (String) data;
-                //  wso2.siddhi.environment.properties:
+                String key = (String) data;
 
-                String value = reader.readConfig(inputString, null);
+                String value = reader.readConfig(key, null);
+
                 return value;
             }
         } else {
-            throw new SiddhiAppRuntimeException("Input to the TheFun function cannot be null");
-            //return ("Hello " + data.toString());
+            throw new SiddhiAppRuntimeException("Input to the getYAMLProperty function cannot be null");
         }
         return null;
     }
@@ -154,7 +340,7 @@ public class GetYAMLProperty extends FunctionExecutor {
 
     @Override
     public Attribute.Type getReturnType() {
-        return Attribute.Type.STRING;
+        return returnType;
     }
 
     /**
@@ -179,4 +365,36 @@ public class GetYAMLProperty extends FunctionExecutor {
     public void restoreState(Map<String, Object> state) {
         //Implement restore state logic.
     }
+
+//    private Object  methodName(Object key, String type, Object defaultValue){
+//
+//        if (key instanceof String) {
+//            String key = (String) key;
+//
+//            String defaultValue = (String) data[1];
+//
+//            String value = reader.readConfig(key, defaultValue);
+//            return value;
+//        } else {
+//            throw new SiddhiAppRuntimeException
+//                    ("The Value of parameter Key to the getYAMLProperty function must be String");
+//        }
+//        String value = reader.readConfig(key, null);
+//        T returnValue = null;
+//        if(value != null){
+//
+//            try {
+//                 returnValue = (T) value;
+//            }
+//            catch (Exception e){
+//                throw new SiddhiAppRuntimeException("cast exception");
+//            }
+//
+//        }
+//        else{
+//
+//        }
+//
+//        return returnValue;
+//    }
 }
