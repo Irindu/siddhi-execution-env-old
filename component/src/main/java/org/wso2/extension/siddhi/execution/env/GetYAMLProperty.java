@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -35,7 +35,7 @@ import org.wso2.siddhi.query.api.exception.SiddhiAppValidationException;
 import java.util.Map;
 
 /**
- * Siddhi Function for TheFun.
+ * Siddhi Function getYAMLProperty to read property values from deployment YAML.
  */
 
 @Extension(
@@ -132,18 +132,9 @@ public class GetYAMLProperty extends FunctionExecutor {
         }
 
         if (attributeExpressionExecutors.length > 2) {
+
             Attribute.Type attribute3Type = attributeExpressionExecutors[2].getReturnType();
-//            if (!((attribute3Type == Attribute.Type.DOUBLE)
-//                    || (attribute3Type == Attribute.Type.INT)
-//                    || (attribute3Type == Attribute.Type.FLOAT)
-//                    || (attribute3Type == Attribute.Type.STRING)
-//                    || (attribute3Type == Attribute.Type.LONG))) {
-//                throw new SiddhiAppValidationException("Invalid parameter type found " +
-//                        "for the argument defaultValue getYAMLProperty() function, " +
-//                        "required " + Attribute.Type.INT + " or " + Attribute.Type.LONG +
-//                        " or " + Attribute.Type.FLOAT + " or " + Attribute.Type.DOUBLE +
-//                        ", but found " + attribute3Type.toString());
-//            }
+
             if (!(attribute3Type == returnType)) {
                 throw new SiddhiAppValidationException("Type of parameter default.Value " +
                         "needs to match parameter data.type");
@@ -293,7 +284,7 @@ public class GetYAMLProperty extends FunctionExecutor {
 
                             }
                     }
-                  return null;
+                    return null;
                 }
 
             } else {
@@ -315,9 +306,9 @@ public class GetYAMLProperty extends FunctionExecutor {
      */
     @Override
     protected Object execute(Object data) {
-        //Sample code.
+
         if (data != null) {
-            //type-conversion.
+
             if (data instanceof String) {
                 String key = (String) data;
 
@@ -366,35 +357,4 @@ public class GetYAMLProperty extends FunctionExecutor {
         //Implement restore state logic.
     }
 
-//    private Object  methodName(Object key, String type, Object defaultValue){
-//
-//        if (key instanceof String) {
-//            String key = (String) key;
-//
-//            String defaultValue = (String) data[1];
-//
-//            String value = reader.readConfig(key, defaultValue);
-//            return value;
-//        } else {
-//            throw new SiddhiAppRuntimeException
-//                    ("The Value of parameter Key to the getYAMLProperty function must be String");
-//        }
-//        String value = reader.readConfig(key, null);
-//        T returnValue = null;
-//        if(value != null){
-//
-//            try {
-//                 returnValue = (T) value;
-//            }
-//            catch (Exception e){
-//                throw new SiddhiAppRuntimeException("cast exception");
-//            }
-//
-//        }
-//        else{
-//
-//        }
-//
-//        return returnValue;
-//    }
 }

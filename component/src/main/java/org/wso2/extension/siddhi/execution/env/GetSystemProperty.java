@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -20,9 +20,9 @@ package org.wso2.extension.siddhi.execution.env;
 
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
-//import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.Parameter;
 import org.wso2.siddhi.annotation.ReturnAttribute;
-//import org.wso2.siddhi.annotation.util.DataType;
+import org.wso2.siddhi.annotation.util.DataType;
 import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.executor.ExpressionExecutor;
@@ -33,17 +33,27 @@ import org.wso2.siddhi.query.api.exception.SiddhiAppValidationException;
 
 import java.util.Map;
 
+
 /**
- * Siddhi Function for TheFun.
+ * Siddhi Function getSystemProperty to read Operating system Properties.
  */
 
 @Extension(
         name = "getSystemProperty",
         namespace = "env",
-        description = "This function returns system property",
+        description = "This function returns system property given the system property key",
         returnAttributes = @ReturnAttribute(
                 description = "Returned type will be string.",
                 type = {org.wso2.siddhi.annotation.util.DataType.STRING}),
+        parameters = {
+                @Parameter(name = "key",
+                        description = "This specifies Key of the property to be read.",
+                        type = {DataType.STRING}),
+                @Parameter(name = "default.value",
+                        description = "This specifies the default Value to be returned " +
+                                "if the property value is not available.",
+                        type = {DataType.STRING})
+        },
         examples = {
                 @Example(
                         syntax = "define stream inputStream (symbol string, price long, volume long);\n" +
@@ -133,9 +143,9 @@ public class GetSystemProperty extends FunctionExecutor {
      */
     @Override
     protected Object execute(Object data) {
-        //Sample code.
+
         if (data != null) {
-            //type-conversion.
+
             if (data instanceof String) {
                 String key = (String) data;
                 return System.getenv(key);

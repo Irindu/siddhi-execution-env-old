@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
+ * Copyright (c) 2018, WSO2 Inc. (http://www.wso2.org) All Rights Reserved.
  *
  * WSO2 Inc. licenses this file to you under the Apache License,
  * Version 2.0 (the "License"); you may not use this file except
@@ -20,9 +20,9 @@ package org.wso2.extension.siddhi.execution.env;
 
 import org.wso2.siddhi.annotation.Example;
 import org.wso2.siddhi.annotation.Extension;
-//import org.wso2.siddhi.annotation.Parameter;
+import org.wso2.siddhi.annotation.Parameter;
 import org.wso2.siddhi.annotation.ReturnAttribute;
-//import org.wso2.siddhi.annotation.util.DataType;
+import org.wso2.siddhi.annotation.util.DataType;
 import org.wso2.siddhi.core.config.SiddhiAppContext;
 import org.wso2.siddhi.core.exception.SiddhiAppRuntimeException;
 import org.wso2.siddhi.core.executor.ExpressionExecutor;
@@ -32,17 +32,27 @@ import org.wso2.siddhi.query.api.definition.Attribute;
 import org.wso2.siddhi.query.api.exception.SiddhiAppValidationException;
 
 import java.util.Map;
+
 /**
- * Siddhi Function for TheFun.
+ * Siddhi Function getEnvironmentProperty to read Java environment Properties.
  */
 
 @Extension(
         name = "getEnvironmentProperty",
         namespace = "env",
-        description = "This function returns Hello Irindu or the Hello the input",
+        description = "This function returns environment property given the environment property key",
         returnAttributes = @ReturnAttribute(
                 description = "Returned type will be string.",
                 type = {org.wso2.siddhi.annotation.util.DataType.STRING}),
+        parameters = {
+                @Parameter(name = "key",
+                        description = "This specifies Key of the property to be read.",
+                        type = {DataType.STRING}),
+                @Parameter(name = "default.value",
+                        description = "This specifies the default Value to be returned " +
+                                "if the property value is not available.",
+                        type = {DataType.STRING})
+        },
         examples = {
                 @Example(
                         syntax = "define stream inputStream (symbol string, price long, volume long);\n" +
@@ -77,16 +87,16 @@ public class GetEnvironmentProperty extends FunctionExecutor {
         if (!(attributeType == Attribute.Type.STRING)) {
             throw new SiddhiAppValidationException("Invalid parameter type found " +
                     "for the argument key of getEnvironmentProperty() function, " +
-                    "required " + Attribute.Type.STRING  +
+                    "required " + Attribute.Type.STRING +
                     ", but found " + attributeType.toString());
         }
 
-        if (attributeExpressionExecutors.length == 2) {
-            Attribute.Type attribute2Type = attributeExpressionExecutors[0].getReturnType();
+        if (attributeExpressionExecutors.length > 1) {
+            Attribute.Type attribute2Type = attributeExpressionExecutors[1].getReturnType();
             if (!(attribute2Type == Attribute.Type.STRING)) {
                 throw new SiddhiAppValidationException("Invalid parameter type found " +
                         "for the argument default.value of getEnvironmentProperty() function, " +
-                        "required " + Attribute.Type.STRING  +
+                        "required " + Attribute.Type.STRING +
                         ", but found " + attributeType.toString());
             }
         }
@@ -106,7 +116,7 @@ public class GetEnvironmentProperty extends FunctionExecutor {
                 String key = (String) data[0];
                 String defaultValue = (String) data[1];
 
-                return System.getProperty(key , defaultValue);
+                return System.getProperty(key, defaultValue);
 
             } else {
                 throw new SiddhiAppRuntimeException("Input to the getSystemProperty() function must be a String");
@@ -114,7 +124,7 @@ public class GetEnvironmentProperty extends FunctionExecutor {
         }
 
         return null;
-   }
+    }
 
     /**
      * The main execution method which will be called upon event arrival
@@ -139,6 +149,7 @@ public class GetEnvironmentProperty extends FunctionExecutor {
             throw new SiddhiAppRuntimeException("Input to the getEnvironmentProperty() function cannot be null");
         }
     }
+
     /**
      * This will be called only once and this can be used to acquire
      * required resources for the processing element.
